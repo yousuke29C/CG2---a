@@ -223,7 +223,56 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
             break;
         }
         //DirectX毎フレーム処理　ここから
+        //バックバッファの番号取得(２つなので0番か1番)
+        UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
 
+        //1.リソースバリアで書き込み可能に変更
+        D3D12_RESOURCE_BARRIER barrierDesc{};
+        barrierDesc.Transition.pResource = backBuffers[bbIndex];//バックバッファを指定
+        barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;//表示状態から
+        barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;//描画状態へ
+        commandList->ResourceBarrier(1, &barrierDesc);
+
+        //2.描画先の変更
+        // レンダーターゲットビューのハンドルを取得
+        D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+        rtvHandle.ptr += bbIndex * device->GetDescriptorHandleIncrementSize(rtvHeapDesc.Type);
+        commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+
+        //3.描画クリア　　　　　　　R    G     B    A
+        FLOAT clearcolor[] = { 0.1f,0.25f,0.5f,0.0f };//青っぽい色
+        commandList->ClearRenderTargetView(rtvHandle, clearcolor, 0, nullptr);
+        //4.描画コマンドはここから
+
+        //4.描画コマンドはここまで
+        //5.リソースバリアを戻す
+        barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;//表示状態から
+        barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;//描画状態へ
+        commandList->ResourceBarrier(1, &barrierDesc);
+        //命令のクローズ
+        result = commandList->Close();
+        assert(SUCCEEDED(result));
+        //コマンドリストの実行
+        ID3D12CommandList* commandLists[] = { commandList };
+        commandQueue->ExecuteCommandLists(1, commandLists);
+
+        //画面に表示するバッファをクリップ(裏表の入れ替え)
+        result = swapChain->Present(1, 0);
+        assert(SUCCEEDED(result));
+        //コマンドの実行完了を持つ
+        commandQueue->Signal(fence, ++fenceVal);
+        if (fence->GetCompletedValue() != fenceVal) {
+            HANDLE event = CreateEvent(nullptr, false, false, nullptr);
+            fence->SetEventOnCompletion(fenceVal, event);
+            WaitForSingleObject(event, INFINITE);
+            CloseHandle(event);
+        }
+        //キューをクリア
+        result = cmdAllocator->Reset();
+        assert(SUCCEEDED(result));
+        //再びコマンドリストを貯める準備
+        result = commandList->Reset(cmdAllocator, nullptr);
+        assert(SUCCEEDED(result));
         //DirectX毎フレーム処理　ここまで
     }
 
