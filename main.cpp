@@ -218,9 +218,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	 //描画初期化処理
 	 //頂点データ
 	XMFLOAT3 vertices[] = {
-	{ -0.5f, -0.5f, 0.0f},  // Xが-で左　Yが-で下　左下
-	{ -0.5f, +0.5f, 0.0f},  // Xが-で左　Yが+で上　左上
-	{ +0.5f, -0.5f, 0.0f},  // Xが+で右　Yが-で下　右下
+		{ -0.5f, -0.5f, 0.0f },//左下
+		{ -0.5f, 0.5f, 0.0f },//左上
+		{ 0.5f, -0.5f, 0.0f },//右下
 	};
 	//頂点データ全体のサイズ　＝　頂点データ一つ分のサイズ　＊　頂点データの要素数
 	UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
