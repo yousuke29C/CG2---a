@@ -470,15 +470,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		commandList->ClearRenderTargetView(rtvHandle, clearcolor, 0, nullptr);
 		//4.描画コマンドはここから
 		// ビューポート設定コマンド
-		D3D12_VIEWPORT viewport{};
-		viewport.Width = WIN_WIDTH;
-		viewport.Height = WIN_HEIGHT;
-		viewport.TopLeftX = 0;
-		viewport.TopLeftY = 0;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		// ビューポート設定コマンドを、コマンドリストに積む
-		commandList->RSSetViewports(1, &viewport);
+		D3D12_VIEWPORT viewport[4];
+		viewport[0].Width = WIN_WIDTH / 4;
+		viewport[0].Height = WIN_HEIGHT / 4;
+		viewport[0].TopLeftX = 0;
+		viewport[0].TopLeftY = 0;
+		viewport[0].MinDepth = 0.0f;
+		viewport[0].MaxDepth = 1.0f;
+
+		viewport[1].Width = WIN_WIDTH / 8;
+		viewport[1].Height = WIN_HEIGHT / 2;
+		viewport[1].TopLeftX = 1000;
+		viewport[1].TopLeftY = 0;
+		viewport[1].MinDepth = 0.0f;
+		viewport[1].MaxDepth = 1.0f;
+
+		viewport[2].Width = WIN_WIDTH / 2;
+		viewport[2].Height = WIN_HEIGHT / 2;
+		viewport[2].TopLeftX = 0;
+		viewport[2].TopLeftY = 300;
+		viewport[2].MinDepth = 0.0f;
+		viewport[2].MaxDepth = 1.0f;
+
+		viewport[3].Width = WIN_WIDTH / 6;
+		viewport[3].Height = WIN_HEIGHT / 10;
+		viewport[3].TopLeftX = 1000;
+		viewport[3].TopLeftY = 500;
+		viewport[3].MinDepth = 0.0f;
+		viewport[3].MaxDepth = 1.0f;
+
 
 		// シザー矩形
 		D3D12_RECT scissorRect{};
@@ -502,6 +522,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 描画コマンド
 		commandList->DrawInstanced(_countof(vertices), 1, 0, 0);//全ての頂点を使って描画
 
+		//ビューポートの数だけfor文を回す
+		for (int i = 0; i < sizeof(viewport) / sizeof(viewport[0]); i++) {
+			//ビューポートを設定
+		// ビューポート設定コマンドを、コマンドリストに積む
+			commandList->RSSetViewports(1, &viewport[i]);
+
+			commandList->DrawInstanced(_countof(viewport), 1, 0, 0);
+		}
 
 
 
