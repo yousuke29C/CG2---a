@@ -456,10 +456,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		FLOAT clearcolor[] = { 0.1f,0.25f,0.5f,0.0f };//青っぽい色
 		if (key[DIK_SPACE])     // スペースキーが押されていたら
 		{
-			clearcolor[0] = { 0.7f };//青っぽい色
-			clearcolor[1] = { 0.5f };
-			clearcolor[2] = { 0.3f };
-			clearcolor[3] = { 0.0f };
+			clearcolor[0] = { 1.0f };//青っぽい色
+			clearcolor[1] = { 0.0f };
+			clearcolor[2] = { 0.5f };
+			clearcolor[3] = { 1.0f };
 		}
 
 		bool キーを押した状態か(uint8_t キー番号);
