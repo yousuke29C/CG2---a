@@ -30,6 +30,11 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
+bool キーを押した状態か(uint8_t キー番号);
+bool キーを離した状態か(uint8_t キー番号);
+bool キーを押した瞬間か(uint8_t キー番号);
+bool キーを離した瞬間か(uint8_t キー番号);
+
 //windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -462,11 +467,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			clearcolor[3] = { 1.0f };
 		}
 
-		bool キーを押した状態か(uint8_t キー番号);
-		bool キーを離した状態か(uint8_t キー番号);
-		bool キーを押した瞬間か(uint8_t キー番号);
-		bool キーを離した瞬間か(uint8_t キー番号);
-
 		commandList->ClearRenderTargetView(rtvHandle, clearcolor, 0, nullptr);
 		//4.描画コマンドはここから
 		// ビューポート設定コマンド
@@ -508,7 +508,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		scissorRect.bottom = scissorRect.top + WIN_HEIGHT;//切り抜き座標下
 		// シザー矩形設定コマンドを、コマンドリストに積む
 		commandList->RSSetScissorRects(1, &scissorRect);
-		
+
 		// パイプラインステートとルートシグネチャの設定コマンド
 		commandList->SetPipelineState(pipelineState);
 		commandList->SetGraphicsRootSignature(rootSignature);
