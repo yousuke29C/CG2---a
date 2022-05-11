@@ -243,7 +243,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 // 定数バッファ用データ構造体（マテリアル）
 	struct ConstBufferDataMaterial {
-		XMFLOAT4 color; 
+		XMFLOAT4 color;
 	};// 色 (RGBA)
 
 	// ヒープ設定
@@ -272,12 +272,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ConstBufferDataMaterial* constMapMaterial = nullptr;
 	result = constBuffMaterial->Map(0, nullptr, (void**)&constMapMaterial); // マッピング
 	assert(SUCCEEDED(result));
-	// 値を書き込むと自動的に転送される
-	constMapMaterial->color = XMFLOAT4(1, 0, 0, 0.5f);              // RGBAで半透明の赤
 
-
-
-
+	float RED = 1.0f;
+	float GREEN = 0.0f;
+	float BLUE = 0.0f;
 
 
 	 //頂点データ
@@ -420,18 +418,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	blenddesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;    // 加算
 	blenddesc.SrcBlendAlpha = D3D12_BLEND_ONE;      // ソースの値を100% 使う
 	blenddesc.DestBlendAlpha = D3D12_BLEND_ZERO;    // デストの値を  0% 使う
-	//// 加算合成
+
+													//// 加算合成
 	//blenddesc.BlendOp = D3D12_BLEND_OP_ADD; // 加算
 	//blenddesc.SrcBlend = D3D12_BLEND_ONE;   // ソースの値を100% 使う
 	//blenddesc.DestBlend = D3D12_BLEND_ONE;  // デストの値を100% 使う
+
 	//// 減算合成
 	//blenddesc.BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;    // デストからソースを減算
 	//blenddesc.SrcBlend = D3D12_BLEND_ONE;               // ソースの値を100% 使う
 	//blenddesc.DestBlend = D3D12_BLEND_ONE;              // デストの値を100% 使う
+
 	//// 色反転
 	//blenddesc.BlendOp = D3D12_BLEND_OP_ADD;             // 加算
 	//blenddesc.SrcBlend = D3D12_BLEND_INV_DEST_COLOR;    // 1.0f-デストカラーの値
 	//blenddesc.DestBlend = D3D12_BLEND_ZERO;             // 使わない
+
 	// 半透明合成
 	blenddesc.BlendOp = D3D12_BLEND_OP_ADD;             // 加算
 	blenddesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;         // ソースのアルファ値
@@ -487,7 +489,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
 	assert(SUCCEEDED(result));
 
-
+	int isGradationflag = 0;
 
 	while (true) {
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -499,6 +501,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (msg.message == WM_QUIT) {
 			break;
 		}
+		if (GREEN <= 1.0f) {
+			RED -= 0.001f;
+			GREEN += 0.001f;
+		}
+		// 値を書き込むと自動的に転送される
+		constMapMaterial->color = XMFLOAT4(RED, GREEN, BLUE, 0.5f);              // RGBAで半透明の赤
 		//DirectX毎フレーム処理　ここから
 
 		// キーボード情報の取得開始
@@ -567,7 +575,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		scissorRect.bottom = scissorRect.top + WIN_HEIGHT;//切り抜き座標下
 		// シザー矩形設定コマンドを、コマンドリストに積む
 		commandList->RSSetScissorRects(1, &scissorRect);
-		
+
 		// パイプラインステートとルートシグネチャの設定コマンド
 		commandList->SetPipelineState(pipelineState);
 		commandList->SetGraphicsRootSignature(rootSignature);
@@ -577,7 +585,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 描画コマンド
 		commandList->DrawInstanced(_countof(vertices), 1, 0, 0);
 
-
 		// プリミティブ形状の設定コマンド
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);//三角形リスト
 
@@ -586,8 +593,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 描画コマンド
 		commandList->DrawInstanced(_countof(vertices), 1, 0, 0);//全ての頂点を使って描画
-
-
 
 
 		//4.描画コマンドはここまで
@@ -619,6 +624,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//再びコマンドリストを貯める準備
 		result = commandList->Reset(cmdAllocator, nullptr);
 		assert(SUCCEEDED(result));
+
 		//DirectX毎フレーム処理　ここまで
 	}
 
