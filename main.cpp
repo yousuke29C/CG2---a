@@ -596,10 +596,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 全ピクセルの色を初期化
 	for (size_t i = 0; i < imageDataCount; i++) {
-		imageData[i].x = 0.4f;    // R
+		imageData[i].x = 0.7f;    // R
 		imageData[i].y = 0.7f;    // G
 		imageData[i].z = 1.0f;    // B
-		imageData[i].w = 0.5f;    // A
+		imageData[i].w = 0.7f;    // A
 	}
 
 	// ヒープ設定
