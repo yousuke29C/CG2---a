@@ -11,7 +11,6 @@ using namespace DirectX;
 #include <dinput.h>
 #include <DirectXTex.h>
 
-
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3d12.lib")
@@ -257,14 +256,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//};
 
 	// 頂点データ
+	//	Vertex vertices[] = {
+	//	// x      y     z       u     v
+	//	{{  0.0f, 100.0f, 0.0f}, {0.0f, 1.0f}},//左下
+	//	{{  0.0f,   0.0f, 0.0f}, {0.0f, 0.0f}},//左上
+	//	{{100.0f, 100.0f, 0.0f}, {1.0f, 1.0f}},//右下
+	//	{{100.0f,   0.0f, 0.0f}, {1.0f, 0.0f}},//右上
+	//};
 	Vertex vertices[] = {
-		// x      y     z       u     v
-		{{  0.0f, 100.0f, 0.0f}, {0.0f, 1.0f}},//左下
-		{{  0.0f,   0.0f, 0.0f}, {0.0f, 0.0f}},//左上
-		{{100.0f, 100.0f, 0.0f}, {1.0f, 1.0f}},//右下
-		{{100.0f,   0.0f, 0.0f}, {1.0f, 0.0f}},//右上
+		// x       y       z       u    v
+		{{-50.0f,-50.0f, 50.0f}, {0.0f, 1.0f}}, // 左下
+		{{-50.0f, 50.0f, 50.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 50.0f,-50.0f, 50.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 50.0f, 50.0f, 50.0f}, {1.0f, 0.0f}}, // 右上
 	};
-
 
 	// インデックスデータ
 	unsigned short indices[] = {
@@ -430,6 +435,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	constMapTransform->mat.r[1].m128_f32[1] = -2.0f / 720;
 	constMapTransform->mat.r[3].m128_f32[0] = -1.0f;
 	constMapTransform->mat.r[3].m128_f32[1] = 1.0f;
+
+	// 並行投影行列の計算
+	constMapTransform->mat = XMMatrixOrthographicOffCenterLH(
+		0, 1280,
+		720, 0,
+		0.0f, 1.0f
+	);
+
+	// 透視投影行列の変換
+	//constMapTransform->mat = XMMatrixPerspectiveFovLH(
+	//	XMConvertToRadians(45.0f), // 上下画角45度
+	//	(float)1289 / 720,         // アスペクト比（画面横幅 / 画面縦幅）
+	//	0.1f, 1000.0f              //  前端、奥端
+	//);
+
+	// 射影変換行列(透視投影)
+	XMMATRIX matProjection =
+		XMMatrixPerspectiveFovLH(
+			XMConvertToRadians(45.0f),
+			(float)WIN_WIDTH / WIN_HEIGHT,
+			0.1f, 1000.0f
+		);
+
+	// 定数バッファに転送
+	constMapTransform->mat = matProjection;
 
 	/*float RED = 1.0f;
 	float GREEN = 0.0f;
