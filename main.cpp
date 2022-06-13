@@ -249,22 +249,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		XMFLOAT2 uv;  // uv座標
 	};
 	// 頂点データ
-	//Vertex vertices[] = {
-	//	// x      y     z       u     v
-	//	{{-0.4f, -0.7f, 0.0f}, {0.0f, 1.0f}},//左下
-	//	{{-0.4f, +0.7f, 0.0f}, {0.0f, 0.0f}},//左上
-	//	{{+0.4f, -0.7f, 0.0f}, {1.0f, 1.0f}},//右下
-	//	{{+0.4f, +0.7f, 0.0f}, {1.0f, 0.0f}},//右上
-	//};
-
-	// 頂点データ
-	//	Vertex vertices[] = {
-	//	// x      y     z       u     v
-	//	{{  0.0f, 100.0f, 0.0f}, {0.0f, 1.0f}},//左下
-	//	{{  0.0f,   0.0f, 0.0f}, {0.0f, 0.0f}},//左上
-	//	{{100.0f, 100.0f, 0.0f}, {1.0f, 1.0f}},//右下
-	//	{{100.0f,   0.0f, 0.0f}, {1.0f, 0.0f}},//右上
-	//};
 	Vertex vertices[] = {
 		// x       y       z       u    v
 		{{-50.0f,-50.0f, 0.0f}, {0.0f, 1.0f}}, // 左下
@@ -426,7 +410,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			IID_PPV_ARGS(&constBuffTransform));
 		assert(SUCCEEDED(result));
 		// 定数バッファのマッピング
-
 		result = constBuffTransform->Map(0, nullptr, (void**)&constMapTransform); // マッピング
 		assert(SUCCEEDED(result));
 
@@ -467,12 +450,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	XMFLOAT3 up(0, 1, 0);     // 上方向ベクトル
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 
-	/*float RED = 1.0f;
-	float GREEN = 0.0f;
-	float BLUE = 0.0f;*/
+	// ワールド変換行列
+	XMMATRIX matWorld;
+	matWorld = XMMatrixIdentity();
+
+	XMMATRIX matScale; // スケーリング行列
+	matScale = XMMatrixScaling(1.0f, 0.5f, 1.0f);
+	matWorld += matScale; // ワールド行列にスケーリングを反映
+
+	XMMATRIX matRot; // 回転行列
+	matRot = XMMatrixIdentity();
+	matRot += XMMatrixRotationZ(XMConvertToRadians(0.0f));  // Z軸まわりに0度回転してから
+	matRot += XMMatrixRotationX(XMConvertToRadians(15.0f)); // X軸まわりに15度回転してから
+	matRot += XMMatrixRotationY(XMConvertToRadians(30.0f)); // Y軸まわりに30度回転
+	matWorld += matRot; // ワールド行列に回転を反映
+
+	XMMATRIX matTrans; // 平行移動行列
+	matTrans = XMMatrixTranslation(-50.0f, 0, 0); // (-50.0,0)平行移動
+	matWorld += matTrans; // ワールド行列に平行移動を反映
+
+	// 座標
+	XMFLOAT3 position = { 0.0f,0.0f,0.0f };
+
+	// ワールド、ビュー、プロジェクションを合成して定数バッファへの転送処理
+	constMapTransform->mat = matWorld * matView * matProjection;
 
 	// 値を書き込むと自動的に転送される
-	constMapMaterial->color = XMFLOAT4(1, 1, 1, 0.5f);              // RGBAで半透明の赤
+	constMapMaterial->color = XMFLOAT4(1, 1, 1, 1.0f);              // RGBAで半透明の赤
+
 
 	// 横方向ピクセル数
 	const size_t textureWidth = 256;
@@ -810,24 +815,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	int isGradationflag = 0;
 
-
-
 	while (true) {
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);//キー入力メッセージの処理
 			DispatchMessage(&msg);//プロシージャーにメッセージを送る
 		}
-
-		////バツボタンで終了メッセージが来たらゲームループを抜ける
-		//if (msg.message == WM_QUIT) {
-		//	break;
-		//}
-		//if (GREEN <= 1.0f) {
-		//	RED -= 0.001f;
-		//	GREEN += 0.001f;
-		//}
-		//// 値を書き込むと自動的に転送される
-		//constMapMaterial->color = XMFLOAT4(RED, GREEN, BLUE, 0.5f);              // RGBAで半透明の赤
 
 		//DirectX毎フレーム処理　ここから
 
@@ -844,7 +836,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			OutputDebugStringA("Hit 0\n");  // 出力ウィンドウに「Hit 0」と表示
 		}
 
-
+		// いずれかのキーを押していたら
 		if (key[DIK_D] || key[DIK_A])
 		{
 			if (key[DIK_D]) { angle += XMConvertToRadians(1.0f); }
@@ -856,9 +848,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ビュー変換行列
 			matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 		}
+		if (key[DIK_UP] || key[DIK_DOWN] || key[DIK_RIGHT] || key[DIK_LEFT])
+		{
+			// 座標を移動する処理（Z座標）
+			if (key[DIK_UP]) { position.z += 1.5f; }
+			else if (key[DIK_DOWN]) { position.z -= 1.5f; }
+			if (key[DIK_RIGHT]) { position.x += 1.5f; }
+			else if (key[DIK_LEFT]) { position.x -= 1.5f; }
+		}
+		matWorld = XMMatrixIdentity();
+		matWorld += matScale;
+		matWorld += matRot;
+		XMMATRIX matTrans; // 平行移動行列
+		matTrans = XMMatrixTranslation(position.x, position.y, position.z);
+		matWorld += matTrans; // ワールド行列に平行移動を反映
 
 		// 定数バッファに転送
-		constMapTransform->mat = matView * matProjection;
+		constMapTransform->mat = matWorld * matView * matProjection;
 
 		//バックバッファの番号取得(２つなので0番か1番)
 		UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
@@ -976,7 +982,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//ウィンドウクラスを登録解除
 	UnregisterClass(w.lpszClassName, w.hInstance);
-
 
 	return 0;
 }

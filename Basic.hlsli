@@ -1,16 +1,12 @@
 //マテリアル
 cbuffer ConstBufferDataMaterial : register(b0)
 {
-    //色(RGBA)
-    float4 color;
+    float4 color;//色(RGBA)
 };
-
-//３D変換行列
-cbuffer ConstBufferDateTransform : register(b1)
+cbuffer ConstBufferDataMaterial : register(b1)
 {
-    matrix mat;//３D変換行列
-}
-
+    matrix mat;// 3D変換行列
+};
 //頂点シェーダーの出力構造体
 //(頂点シェーダーからピクセルシェーダーへのやり取りに使用する）
 struct VSOutput
@@ -20,4 +16,3 @@ struct VSOutput
     //uv値
     float2 uv  :TEXCOORD;
 };
-
