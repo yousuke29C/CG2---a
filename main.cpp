@@ -17,6 +17,8 @@ using namespace DirectX;
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
+float angle = 0.0f; // カメラの回転角
+
 //ウィンドウプロシージャ
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	//メッセージに応じてゲーム固有の処理を行う
@@ -265,10 +267,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//};
 	Vertex vertices[] = {
 		// x       y       z       u    v
-		{{-50.0f,-50.0f, 50.0f}, {0.0f, 1.0f}}, // 左下
-		{{-50.0f, 50.0f, 50.0f}, {0.0f, 0.0f}}, // 左上
-		{{ 50.0f,-50.0f, 50.0f}, {1.0f, 1.0f}}, // 右下
-		{{ 50.0f, 50.0f, 50.0f}, {1.0f, 0.0f}}, // 右上
+		{{-50.0f,-50.0f, 0.0f}, {0.0f, 1.0f}}, // 左下
+		{{-50.0f, 50.0f, 0.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 50.0f,-50.0f, 0.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 50.0f, 50.0f, 0.0f}, {1.0f, 0.0f}}, // 右上
 	};
 
 	// インデックスデータ
@@ -458,8 +460,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			0.1f, 1000.0f
 		);
 
-	// 定数バッファに転送
-	constMapTransform->mat = matProjection;
+	// ビュー変換行列
+	XMMATRIX matView;
+	XMFLOAT3 eye(0, 0, -100); // 視点座標
+	XMFLOAT3 target(0, 0, 0); // 注視点座標
+	XMFLOAT3 up(0, 1, 0);     // 上方向ベクトル
+	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 
 	/*float RED = 1.0f;
 	float GREEN = 0.0f;
@@ -467,7 +473,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 値を書き込むと自動的に転送される
 	constMapMaterial->color = XMFLOAT4(1, 1, 1, 0.5f);              // RGBAで半透明の赤
-
 
 	// 横方向ピクセル数
 	const size_t textureWidth = 256;
@@ -839,6 +844,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			OutputDebugStringA("Hit 0\n");  // 出力ウィンドウに「Hit 0」と表示
 		}
 
+
+		if (key[DIK_D] || key[DIK_A])
+		{
+			if (key[DIK_D]) { angle += XMConvertToRadians(1.0f); }
+			else if (key[DIK_A]) { angle -= XMConvertToRadians(1.0f); }
+
+			// angleラジアンだけY軸まわりに回転。半径は-100
+			eye.x = -100 * sinf(angle);
+			eye.z = -100 * cosf(angle);
+			// ビュー変換行列
+			matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+		}
+
+		// 定数バッファに転送
+		constMapTransform->mat = matView * matProjection;
 
 		//バックバッファの番号取得(２つなので0番か1番)
 		UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
