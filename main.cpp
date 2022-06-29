@@ -183,6 +183,49 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		(IDXGISwapChain1**)&swapChain);
 	assert(SUCCEEDED(result));
 
+	//リソース設定
+	D3D12_RESOURCE_DESC depthResourceDesc{};
+	depthResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthResourceDesc.Width = WIN_WIDTH;//レンダーターゲットに合わせる
+	depthResourceDesc.Height = WIN_HEIGHT;//レンダーターゲットに合わせる
+	depthResourceDesc.DepthOrArraySize = 1;
+	depthResourceDesc.Format = DXGI_FORMAT_D32_FLOAT;//深度フォーマット
+	depthResourceDesc.SampleDesc.Count = 1;
+	depthResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;//テプスステンシル
+
+	//深度値用ヒーププロパティ
+	D3D12_HEAP_PROPERTIES depthHeapProp{};
+	depthHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
+	//深度値のクリア設定
+	D3D12_CLEAR_VALUE depthClearValue{};//深度値1.0f(最大値)でクリア
+	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT; //深度値フォーマット
+
+	//リソース設定
+	ID3D12Resource* depthBuff = nullptr;
+	result = device->CreateCommittedResource(
+		&depthHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&depthResourceDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS(&depthBuff));
+
+	//深度ビュー用デスクリプタヒープ作成
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
+	dsvHeapDesc.NumDescriptors = 1;//深度ビューは1つ
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	ID3D12DescriptorHeap* dsvHeap = nullptr;
+	result = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap));
+
+	//深度ビュー作成
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	device->CreateDepthStencilView(
+		depthBuff,
+		&dsvDesc,
+		dsvHeap->GetCPUDescriptorHandleForHeapStart());
+
 	//デスクリプタヒープの設定
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;//レンゲーターゲットレビュー
@@ -250,17 +293,64 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	};
 	// 頂点データ
 	Vertex vertices[] = {
+		//前
 		// x       y       z       u    v
-		{{-50.0f,-50.0f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{-50.0f, 50.0f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{ 50.0f,-50.0f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{ 50.0f, 50.0f, 0.0f}, {1.0f, 0.0f}}, // 右上
+		{{-5.0f,-5.0f, -5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f, 5.0f, -5.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 5.0f,-5.0f, -5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f, 5.0f, -5.0f}, {1.0f, 0.0f}}, // 右上
+		//後
+		// x       y       z       u    v
+		{{-5.0f,-5.0f, 5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f, 5.0f, 5.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 5.0f,-5.0f, 5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f, 5.0f, 5.0f}, {1.0f, 0.0f}}, // 右上
+		////左
+		//// x       y       z       u    v
+		{{-5.0f,-5.0f,-5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f,-5.0f, 5.0f}, {0.0f, 0.0f}}, // 左上
+		{{-5.0f, 5.0f,-5.0f}, {1.0f, 1.0f}}, // 右下
+		{{-5.0f, 5.0f, 5.0f}, {1.0f, 0.0f}}, // 右上
+		////右
+		//// x       y       z       u    v
+		{{ 5.0f,-5.0f,-5.0f}, {0.0f, 1.0f}}, // 左下
+		{{ 5.0f,-5.0f, 5.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 5.0f, 5.0f,-5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f, 5.0f, 5.0f}, {1.0f, 0.0f}}, // 右上
+		//下
+		// x       y       z       u    v
+		{{-5.0f, 5.0f, 5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f, 5.0f,-5.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 5.0f, 5.0f, 5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f, 5.0f,-5.0f}, {1.0f, 0.0f}}, // 右上
+		//上
+		//// x       y       z       u    v
+		{{-5.0f,-5.0f, 5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f,-5.0f,-5.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 5.0f,-5.0f, 5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f,-5.0f,-5.0f}, {1.0f, 0.0f}}, // 右上
 	};
 
 	// インデックスデータ
 	unsigned short indices[] = {
+		//前
 		0, 1, 2, //三角形1つ目
 		1, 2, 3, //三角形2つ目
+		//後
+		4, 5, 6, //三角形3つ目
+		5, 6, 7, //三角形4つ目
+		//左
+		8,9,10,  //三角形5つ目
+		9,10,11,//三角形6つ目
+		//右
+		12,13,14,  //三角形7つ目
+		13,14,15, //三角形8つ目
+		////下
+		//16,17,18,  //三角形7つ目
+		//17,18,19, //三角形8つ目
+		////上
+		//20,21,22,  //三角形7つ目
+		//21,22,23 //三角形8つ目
 	};
 
 	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
@@ -500,7 +590,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ScratchImage scratchImg{};
 	// WICテクスチャのロード
 	result = LoadFromWICFile(
-		L"Resources/gensin.jpg",   //「Resources」フォルダの「mario.png」
+		L"Resources/gensin.jpg",   //「Resources」フォルダの「gensin.jpg」
 		WIC_FLAGS_NONE,
 		&metadata, scratchImg);
 	ScratchImage mipChain{};
@@ -684,8 +774,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		},
 	};
 
+
+
 	// グラフィックスパイプライン設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc{};
+
+	//デプスステンシルステートの設定
+	pipelineDesc.DepthStencilState.DepthEnable = true;//深度テストを行う
+	pipelineDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;//書き込み許可
+	pipelineDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;//小さければ合格
+	pipelineDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;//深度値フォーマット
 
 	// シェーダーの設定
 	pipelineDesc.VS.pShaderBytecode = vsBlob->GetBufferPointer();
@@ -880,10 +978,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// レンダーターゲットビューのハンドルを取得
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 		rtvHandle.ptr += bbIndex * device->GetDescriptorHandleIncrementSize(rtvHeapDesc.Type);
-		commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap->GetCPUDescriptorHandleForHeapStart();
+		commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 		//3.描画クリア　　　　　　　R    G     B    A
 		FLOAT clearcolor[] = { 0.1f,0.25f,0.5f,0.0f };//青っぽい色
+		commandList->ClearRenderTargetView(rtvHandle, clearcolor, 0, nullptr);
+		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
 		//if (key[DIK_SPACE])     // スペースキーが押されていたら
 		//{
 		//	clearcolor[0] = { 0.7f };//青っぽい色
