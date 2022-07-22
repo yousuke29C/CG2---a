@@ -474,6 +474,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	result = constBuffMaterial->Map(0, nullptr, (void**)&constMapMaterial); // マッピング
 	assert(SUCCEEDED(result));
 
+	//色変化
+	float RED = 1;
+	float GREEN = 0;
+	float BLUE = 0;
+	constMapMaterial->color = XMFLOAT4(RED, GREEN, BLUE, 0.5f);
+
 	ID3D12Resource* constBuffTransform = nullptr;
 	ConstBufferDataTransform* constMapTransform = nullptr;
 	{
@@ -919,6 +925,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);//プロシージャーにメッセージを送る
 		}
 
+		//色変化
+		if (GREEN <= 1.0f) {
+			RED -= 0.001f;
+			GREEN += 0.001f;
+		}
+		constMapMaterial->color = XMFLOAT4(RED, GREEN, BLUE, 0.5f);
 		//DirectX毎フレーム処理　ここから
 
 		// キーボード情報の取得開始
@@ -954,6 +966,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			if (key[DIK_RIGHT]) { position.x += 1.5f; }
 			else if (key[DIK_LEFT]) { position.x -= 1.5f; }
 		}
+
 		matWorld = XMMatrixIdentity();
 		matWorld += matScale;
 		matWorld += matRot;
