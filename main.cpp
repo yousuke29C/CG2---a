@@ -942,6 +942,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 			constMapMaterial->color = XMFLOAT4(RED, GREEN, BLUE, 0.3f);
 		}
+		if (key[DIK_J]) {
+			//F•Ï‰»
+			if (RED <= 1.0f) {
+				RED += 0.001f;
+				GREEN -= 0.001f;
+			}
+			constMapMaterial->color = XMFLOAT4(RED, GREEN, BLUE, 1.0f);
+		}
+
+
+
 		// ”Žš‚Ì0ƒL[‚ª‰Ÿ‚³‚ê‚Ä‚¢‚½‚ç
 		if (key[DIK_0])
 		{
