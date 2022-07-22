@@ -925,12 +925,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);//プロシージャーにメッセージを送る
 		}
 
-		//色変化
-		if (GREEN <= 1.0f) {
-			RED -= 0.001f;
-			GREEN += 0.001f;
-		}
-		constMapMaterial->color = XMFLOAT4(RED, GREEN, BLUE, 0.5f);
 		//DirectX毎フレーム処理　ここから
 
 		// キーボード情報の取得開始
@@ -940,6 +934,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		BYTE key[256] = {};
 		keyboard->GetDeviceState(sizeof(key), key);
 
+		if (key[DIK_G]) {
+			//色変化
+			if (GREEN <= 1.0f) {
+				RED -= 0.001f;
+				GREEN += 0.001f;
+			}
+			constMapMaterial->color = XMFLOAT4(RED, GREEN, BLUE, 0.3f);
+		}
 		// 数字の0キーが押されていたら
 		if (key[DIK_0])
 		{
