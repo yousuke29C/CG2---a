@@ -347,11 +347,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		13,12,14,  //三角形7つ目
 		14,15,13, //三角形8つ目
 		//////下
-		16,17,18,  //三角形9つ目
-		18,17,19, //三角形10つ目
+		16,18,17,  //三角形9つ目
+		19,17,18, //三角形10つ目
 		//////上
-		20,21,22,  //三角形11つ目
-		22,21,23 //三角形12つ目
+		22,21,20,  //三角形11つ目
+		23,21,22 //三角形12つ目
 	};
 
 	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
@@ -627,7 +627,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	matWorld0 = XMMatrixIdentity();
 
 	XMMATRIX matScale0; // スケーリング行列
-	matScale0 = XMMatrixScaling(1.0f, 0.5f, 1.0f);
+	matScale0 = XMMatrixScaling(1.0f, 1.0f, 1.0f);
 
 	XMMATRIX matRot0; // 回転行列
 	matRot0 = XMMatrixIdentity();
@@ -652,10 +652,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	XMMATRIX matWorld1;
 	matWorld1 = XMMatrixIdentity();
 	XMMATRIX matScale1 = XMMatrixScaling(1.0f, 1.0f, 1.0f);
-	XMMATRIX matRot1 = XMMatrixRotationY(XM_PI / 4.0f);
+	XMMATRIX matRot1; // 回転行列
+	matRot1 = XMMatrixIdentity();
+	matRot1 *= XMMatrixRotationZ(XMConvertToRadians(0.0f));  // Z軸まわりに0度回転してから
+	matRot1 *= XMMatrixRotationX(XMConvertToRadians(15.0f)); // X軸まわりに15度回転してから
+	matRot1 *= XMMatrixRotationY(XMConvertToRadians(30.0f)); // Y軸まわりに30度回転
 	XMMATRIX matTrans1 = XMMatrixTranslation(-20.0f, 0, 0);
 
-	matWorld1 *= matScale1 * matRot1 * matTrans1;
+	matWorld1 *= matScale1;
+	matWorld1 *= matRot1;
+	matWorld1 *= matTrans1;
+
 
 	constMapTransform1->mat = matWorld1 * matView * matProjection;
 
@@ -1051,14 +1058,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			else if (key[DIK_LEFT]) { position.x -= 1.5f; }
 		}
 		matWorld0 = XMMatrixIdentity();
-		matWorld0 += matScale0;
-		matWorld0 += matRot0;
-		XMMATRIX matTrans; // 平行移動行列
-		matTrans = XMMatrixTranslation(position.x, position.y, position.z);
-		matWorld0 += matTrans; // ワールド行列に平行移動を反映
+		matWorld0 *= matScale0;
+		matWorld0 *= matRot0;
+		XMMATRIX matTrans0; // 平行移動行列
+		matTrans0 = XMMatrixTranslation(position.x, position.y, position.z);
+		matWorld0 *= matTrans0; // ワールド行列に平行移動を反映
+
+		matWorld1 = XMMatrixIdentity();
+		matWorld1 *= matScale1;
+		matWorld1 *= matRot1;
+		matWorld1 *= matTrans1; // ワールド行列に平行移動を反映
 
 		// 定数バッファに転送
 		constMapTransform0->mat = matWorld0 * matView * matProjection;
+		constMapTransform1->mat = matWorld1 * matView * matProjection;
 
 		//バックバッファの番号取得(２つなので0番か1番)
 		UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
